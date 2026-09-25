@@ -1,0 +1,2 @@
+record_id,attendance_pct,assessment_pct,assignment_pct,engagement_score,prior_performance_pct,risk_label
+TEST-INVALID,120,75,80,7,70,medium
