@@ -1,5 +1,29 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+
+# Virtual environments
 .venv/
 venv/
-.env
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# OULAD extracted raw files
+data/raw/oulad_check/
+
+# Python generated files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
