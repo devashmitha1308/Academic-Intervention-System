@@ -1,0 +1,39 @@
+{
+  "model": "MLPClassifier",
+  "hidden_layer_sizes": [
+    64,
+    32
+  ],
+  "target": "risk",
+  "excluded_features": [
+    "risk",
+    "final_result",
+    "id_student"
+  ],
+  "input_features": [
+    "code_module",
+    "code_presentation",
+    "gender",
+    "region",
+    "highest_education",
+    "imd_band",
+    "age_band",
+    "num_of_prev_attempts",
+    "studied_credits",
+    "disability",
+    "assessment_average",
+    "assessment_count",
+    "assessment_max",
+    "assessment_min",
+    "assessment_weighted_average",
+    "total_clicks",
+    "average_clicks",
+    "maximum_clicks",
+    "active_days",
+    "unique_resources"
+  ],
+  "training_rows": 22815,
+  "validation_rows": 4889,
+  "test_rows": 4889,
+  "random_state": 42
+}
