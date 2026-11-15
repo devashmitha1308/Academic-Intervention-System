@@ -1,7 +1,7 @@
 # Step 5 - Product V1
 
 ## Team and project
-- Team name: Devashmitha
+- Team name: NeuroNexus
 - Project code and title: SC03: Student Performance and Academic Intervention System
 - Branch and commit: `step-5-product-v1`
 
@@ -73,6 +73,10 @@ The application validates all inputs, evaluates the indicators against the train
   ```powershell
   python src/check_product_prediction.py
   ```
+- Student overlap audit:
+  ```powershell
+  python src/audit_student_split.py
+  ```
 
 ## Actual test evidence
 
@@ -85,16 +89,55 @@ The application validates all inputs, evaluates the indicators against the train
 | Same input through UI and inference code | Comparison between `python src/check_product_prediction.py` and UI "Load one existing example" | Output values, predicted class (1), and probability (0.9676) must match exactly | `data/reports/step5_ui_reference_prediction.csv` matched UI output identically across all fields | Pass |
 
 ## Screenshots and evidence
-- Unit testing evidence: `Ran 5 tests in 0.001s, OK` via `python -m unittest test_product_predict -v`.
-- Reference prediction output saved to: `data/reports/step5_ui_reference_prediction.csv`.
-- Interactive application tested at `http://localhost:8501` with:
-  1. One-click loading of real validation samples via "Load one existing example".
-  2. Input form with explicit labels, units, and clear sections.
-  3. Interactive risk classification and tailored recommendation card.
-  4. CSV export functionality via `Download this result as CSV`.
-  5. Expandable architecture explanation describing the underlying fitted pipeline and lack of retraining during inference.
+- **Input Form Interface**: [01_app_form.png](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/docs/evidence/step5/01_app_form.png)
+  - Displays loaded validation sample with all 20 indicators pre-filled, organized into demographic and engagement columns.
+- **Prediction Result & Decision Support**: [02_prediction_result.png](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/docs/evidence/step5/02_prediction_result.png)
+  - Displays the predicted class (`1`), high-risk alert badge, risk probability (`96.76%`), concrete supportive action steps, result table, and `Download this result as CSV` button.
+- **Input Validation & Error Handling**: [03_validation_error.png](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/docs/evidence/step5/03_validation_error.png)
+  - Demonstrates rejection of an out-of-range value (`assessment_average = 105.0`) with clear inline guidance without unhandled tracebacks.
+- **Automated Unit Testing Evidence**: `Ran 5 tests in 0.001s, OK` via `python -m unittest test_product_predict -v`.
+- **Reference Prediction Output**: Saved to `data/reports/step5_ui_reference_prediction.csv`.
+
+## Student Data Leakage & Split Audit (Response to NeuroNexus Feedback)
+
+In response to instructor feedback: *"explain how you checked that the same student does not appear in both training and test data"*:
+
+### 1. Analysis of Dataset Granularity
+In the Open University Learning Analytics Dataset (OULAD), the primary unit of observation is a **course-module registration** indexed by `(id_student, code_module, code_presentation)`, rather than an isolated student record. 
+- A single student frequently enrolls in more than one module (e.g. taking module `AAA` and module `BBB`, or retaking a presentation).
+- Total records: **32,593** registrations across **28,785** unique students.
+- **3,538 students (12.3%)** are registered in more than one course.
+
+### 2. Overlap Verification Procedure
+We created an automated audit tool ([`src/audit_student_split.py`](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/src/audit_student_split.py)) that computes the set intersection of unique `id_student` values across all splits:
+```python
+train_ids = set(train_df["id_student"].unique())
+test_ids = set(test_df["id_student"].unique())
+val_ids = set(val_df["id_student"].unique())
+
+overlap_train_test = train_ids & test_ids
+overlap_train_val = train_ids & val_ids
+```
+**Audit Output (`data/reports/student_split_audit.json`):**
+- Training: 22,815 rows | 20,939 unique students
+- Validation: 4,889 rows | 4,799 unique students
+- Test: 4,889 rows | 4,804 unique students
+- **Train & Test Overlap**: 812 students (16.9% of test students have a separate course enrollment in the training set).
+- **Train & Validation Overlap**: 803 students.
+- **Validation & Test Overlap**: 171 students.
+
+### 3. Impact & Grouped Splitting Mitigation
+- **Current Formulation (Course-Level Screening)**: The current split evaluates how accurately the model predicts intervention risk for an *individual course enrollment* given that specific course's assessment grades and VLE interaction logs.
+- **Strict Student-Level Generalization**: To guarantee 100% student-level isolation where no student ID appears across splits, we implemented [`src/demo_group_split.py`](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/src/demo_group_split.py) using `sklearn.model_selection.GroupShuffleSplit`:
+  ```python
+  gss = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=42)
+  train_idx, test_idx = next(gss.split(df, groups=df["id_student"]))
+  ```
+  Verification confirmed that `GroupShuffleSplit` achieves **0 overlapping students (0.00%)** between training and evaluation partitions.
 
 ## Earlier feedback addressed
+- Added visual evidence screenshots (`01_app_form.png`, `02_prediction_result.png`, `03_validation_error.png`) under `docs/evidence/step5/`.
+- Conducted and documented a complete student-level data leakage audit between training and test sets using set intersection metrics.
 - Kept model training and hyperparameter search strictly isolated in Step 3; Product V1 performs inference only on the saved model artifact.
 - Implemented comprehensive input validation guarding against missing fields, negative counts, non-finite values, and out-of-bounds percentages before pipeline ingestion.
 - Ensured absolute parity between CLI reference predictions and interactive Streamlit execution.
@@ -105,4 +148,10 @@ The application validates all inputs, evaluates the indicators against the train
 - Dataset constraints: The model was trained on historical data from the Open University Learning Analytics Dataset (OULAD). Patterns may reflect specific course designs and cohort distributions that require institutional recalibration before cross-institution use.
 
 ## Team contributions
-- Devashmitha: Designed and implemented the Product V1 Streamlit interface (`app.py`), developed the robust inference and validation module (`src/product_predict.py`), built automated unit test suites (`test_product_predict.py`), implemented verification scripts (`src/check_product_prediction.py`), and completed the Step 5 documentation.
+- **Team NeuroNexus (Devashmitha)**:
+  - Designed and implemented the Product V1 Streamlit interface (`app.py`).
+  - Developed the robust inference and validation module (`src/product_predict.py`).
+  - Built automated unit test suites (`test_product_predict.py`).
+  - Implemented verification scripts (`src/check_product_prediction.py`).
+  - Conducted the student overlap and data split audit (`src/audit_student_split.py`, `src/demo_group_split.py`).
+  - Generated visual evidence and authored the comprehensive Step 5 documentation (`docs/STEP-5.md`).
