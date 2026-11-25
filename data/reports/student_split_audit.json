@@ -6,24 +6,24 @@
   "students_with_multiple_module_registrations": 3538,
   "split_counts": {
     "train": {
-      "rows": 22815,
-      "unique_students": 20939
+      "rows": 22842,
+      "unique_students": 20149
     },
     "validation": {
-      "rows": 4889,
-      "unique_students": 4799
+      "rows": 4857,
+      "unique_students": 4318
     },
     "test": {
-      "rows": 4889,
-      "unique_students": 4804
+      "rows": 4894,
+      "unique_students": 4318
     }
   },
   "student_id_overlaps": {
-    "train_and_test": 812,
-    "train_and_validation": 803,
-    "validation_and_test": 171,
-    "across_all_three": 29
+    "train_and_test": 0,
+    "train_and_validation": 0,
+    "validation_and_test": 0,
+    "across_all_three": 0
   },
-  "overlap_percentage_of_test": 16.9,
+  "overlap_percentage_of_test": 0.0,
   "explanation": "Because OULAD records are structured per student-course registration (a single student can enroll in multiple distinct modules such as AAA, BBB, etc.), a standard stratified row-level split (train_test_split stratified on risk) evaluates model performance on course-level prediction. For strict student-level zero-overlap evaluation, GroupShuffleSplit(groups=id_student) can be used so that no student ID ever co-occurs in training and test splits."
 }

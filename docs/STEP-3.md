@@ -1,23 +1,24 @@
 # Step 3: ANN Model Development and Evaluation
 
 ## Project
-Student Performance and Academic Intervention System
+Student Performance and Academic Intervention System (Team NeuroNexus)
 
 ## Objective
 To train an Artificial Neural Network (ANN) to identify students who may benefit from academic support using academic performance and engagement indicators.
 
 ## Dataset
-The project uses separate training, validation, and test datasets stored in `data/processed/`.
+The project uses separate training, validation, and test datasets stored in `data/processed/`, partitioned with **strict student-level group isolation** using `GroupShuffleSplit` on `id_student`.
 
-- Training samples: 22,815
-- Validation samples: 4,889
-- Test samples: 4,889
+- Training samples: 22,842 (20,149 unique students)
+- Validation samples: 4,857 (4,318 unique students)
+- Test samples: 4,894 (4,318 unique students)
 - Target variable: `risk`
+- Student ID overlap across splits: **0 (0.00%)**
 
 The `final_result` and `id_student` columns are excluded from the model inputs to avoid target leakage and unnecessary student identification.
 
 ## Model
-An ANN classifier was implemented using scikit-learn's `MLPClassifier`.
+An ANN classifier was implemented using an end-to-end scikit-learn `Pipeline` combining `ColumnTransformer` (scaling numerical features and one-hot encoding categorical features) and `MLPClassifier`.
 
 - Hidden layers: 64 and 32 neurons
 - Activation: ReLU
@@ -30,8 +31,8 @@ An ANN classifier was implemented using scikit-learn's `MLPClassifier`.
 
 | Split | Accuracy | Precision | Recall | F1 Score |
 |---|---:|---:|---:|---:|
-| Validation | 0.8282 | 0.8665 | 0.7974 | 0.8305 |
-| Test | 0.8374 | 0.8749 | 0.8074 | 0.8398 |
+| Validation | 0.8209 | 0.9008 | 0.7429 | 0.8143 |
+| Test | 0.8277 | 0.8949 | 0.7659 | 0.8254 |
 
 ## Generated Outputs
 

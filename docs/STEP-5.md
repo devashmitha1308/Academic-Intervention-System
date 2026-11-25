@@ -28,9 +28,9 @@ The application validates all inputs, evaluates the indicators against the train
   - `code_module`: Course module code (e.g., AAA, BBB, CCC, DDD)
   - `code_presentation`: Presentation cohort (e.g., 2013J, 2014B, 2014J)
   - `gender`: Gender code (`M` or `F`)
-  - `region`: Geographic region (e.g., East Anglian Region, London)
+  - `region`: Geographic region (e.g., East Anglian Region, London, Yorkshire Region)
   - `highest_education`: Qualification level (e.g., Lower Than A Level, HE Qualification)
-  - `imd_band`: Index of Multiple Deprivation band (e.g., 30-40%, 70-80%)
+  - `imd_band`: Index of Multiple Deprivation band (e.g., 30-40%, 60-70%)
   - `age_band`: Age cohort (e.g., 0-35, 35-55, 55<=)
   - `num_of_prev_attempts`: Previous module attempts (integer count >= 0)
   - `studied_credits`: Cumulative module credits (integer >= 0)
@@ -82,17 +82,17 @@ The application validates all inputs, evaluates the indicators against the train
 
 | Case | Actual input or evidence path | Expected behaviour | Observed behaviour | Pass/Fail |
 |---|---|---|---|---|
-| Normal | Row 0 of `data/processed/validation.csv` (Module DDD, 2014J, score 62.5%, clicks 152) | Passes validation; returns class 1, probability 0.9676, and supportive outreach recommendation | Returned class 1, label "Higher Risk (Academic Intervention Recommended)", probability 0.9676, actionable plan | Pass |
+| Normal | Row 0 of `data/processed/validation.csv` (Module AAA, 2013J, score 76.5%, clicks 587) | Passes validation; returns class 0, probability 0.0519, and standard monitoring guidance | Returned class 0, label "Lower Risk (Standard Academic Progress)", probability 0.0519, actionable plan | Pass |
 | Boundary | `assessment_average` tested at 0.0% and 100.0% | Passes validation as valid edge values; model executes prediction successfully | Both 0.0% and 100.0% accepted without errors; valid prediction output generated | Pass |
 | Invalid or missing input | `assessment_average = "-5"`, `assessment_average = "105"`, `code_module = ""`, missing features | Rejects invalid input with descriptive `ValueError`; prevents model execution | Raised `ValueError: assessment_average: score must be between 0 and 100.` and `missing required feature.` | Pass |
 | Missing model/service | `MODEL_PATH` pointed to non-existent file | Raises clear `FileNotFoundError` prompting user to restore Step 3 model artifacts | Raised `FileNotFoundError: Saved model or metadata is missing. Restore your Step 3 files.` | Pass |
-| Same input through UI and inference code | Comparison between `python src/check_product_prediction.py` and UI "Load one existing example" | Output values, predicted class (1), and probability (0.9676) must match exactly | `data/reports/step5_ui_reference_prediction.csv` matched UI output identically across all fields | Pass |
+| Same input through UI and inference code | Comparison between `python src/check_product_prediction.py` and UI "Load one existing example" | Output values, predicted class (0), and probability (0.0519) must match exactly | `data/reports/step5_ui_reference_prediction.csv` matched UI output identically across all fields | Pass |
 
 ## Screenshots and evidence
 - **Input Form Interface**: [01_app_form.png](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/docs/evidence/step5/01_app_form.png)
   - Displays loaded validation sample with all 20 indicators pre-filled, organized into demographic and engagement columns.
 - **Prediction Result & Decision Support**: [02_prediction_result.png](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/docs/evidence/step5/02_prediction_result.png)
-  - Displays the predicted class (`1`), high-risk alert badge, risk probability (`96.76%`), concrete supportive action steps, result table, and `Download this result as CSV` button.
+  - Displays the predicted class, risk status badge, probability, concrete supportive action steps, result table, and `Download this result as CSV` button.
 - **Input Validation & Error Handling**: [03_validation_error.png](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/docs/evidence/step5/03_validation_error.png)
   - Demonstrates rejection of an out-of-range value (`assessment_average = 105.0`) with clear inline guidance without unhandled tracebacks.
 - **Automated Unit Testing Evidence**: `Ran 5 tests in 0.001s, OK` via `python -m unittest test_product_predict -v`.
@@ -100,46 +100,40 @@ The application validates all inputs, evaluates the indicators against the train
 
 ## Student Data Leakage & Split Audit (Response to NeuroNexus Feedback)
 
-In response to instructor feedback: *"explain how you checked that the same student does not appear in both training and test data"*:
+In response to instructor feedback: *"keep students separate between training and test data"*:
 
 ### 1. Analysis of Dataset Granularity
-In the Open University Learning Analytics Dataset (OULAD), the primary unit of observation is a **course-module registration** indexed by `(id_student, code_module, code_presentation)`, rather than an isolated student record. 
-- A single student frequently enrolls in more than one module (e.g. taking module `AAA` and module `BBB`, or retaking a presentation).
+In the Open University Learning Analytics Dataset (OULAD), the raw records represent student-course registrations `(id_student, code_module, code_presentation)`. 
 - Total records: **32,593** registrations across **28,785** unique students.
-- **3,538 students (12.3%)** are registered in more than one course.
+- **3,538 students (12.3%)** are registered in more than one course module.
 
-### 2. Overlap Verification Procedure
-We created an automated audit tool ([`src/audit_student_split.py`](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/src/audit_student_split.py)) that computes the set intersection of unique `id_student` values across all splits:
+### 2. GroupShuffleSplit Implementation (Strict Student Isolation)
+To guarantee 100% student-level isolation across all partitions, `src/prepare_data.py` was implemented with `sklearn.model_selection.GroupShuffleSplit`:
 ```python
-train_ids = set(train_df["id_student"].unique())
-test_ids = set(test_df["id_student"].unique())
-val_ids = set(val_df["id_student"].unique())
+train_gss = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=42)
+train_idx, temp_idx = next(train_gss.split(data, groups=data["id_student"]))
 
-overlap_train_test = train_ids & test_ids
-overlap_train_val = train_ids & val_ids
+val_test_gss = GroupShuffleSplit(n_splits=1, test_size=0.50, random_state=42)
+val_idx, test_idx = next(val_test_gss.split(temp, groups=temp["id_student"]))
 ```
-**Audit Output (`data/reports/student_split_audit.json`):**
-- Training: 22,815 rows | 20,939 unique students
-- Validation: 4,889 rows | 4,799 unique students
-- Test: 4,889 rows | 4,804 unique students
-- **Train & Test Overlap**: 812 students (16.9% of test students have a separate course enrollment in the training set).
-- **Train & Validation Overlap**: 803 students.
-- **Validation & Test Overlap**: 171 students.
 
-### 3. Impact & Grouped Splitting Mitigation
-- **Current Formulation (Course-Level Screening)**: The current split evaluates how accurately the model predicts intervention risk for an *individual course enrollment* given that specific course's assessment grades and VLE interaction logs.
-- **Strict Student-Level Generalization**: To guarantee 100% student-level isolation where no student ID appears across splits, we implemented [`src/demo_group_split.py`](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/src/demo_group_split.py) using `sklearn.model_selection.GroupShuffleSplit`:
-  ```python
-  gss = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=42)
-  train_idx, test_idx = next(gss.split(df, groups=df["id_student"]))
-  ```
-  Verification confirmed that `GroupShuffleSplit` achieves **0 overlapping students (0.00%)** between training and evaluation partitions.
+### 3. Verification & Overlap Audit Results (`data/reports/student_split_audit.json`)
+The automated verification script ([`src/audit_student_split.py`](file:///c:/Users/devas/Downloads/Academic-Intervention-System-main/Academic-Intervention-System-main/src/audit_student_split.py)) confirms:
+- **Training Set**: 22,842 rows | 20,149 unique students
+- **Validation Set**: 4,857 rows | 4,318 unique students
+- **Test Set**: 4,894 rows | 4,318 unique students
+- **Train & Test Overlap**: **0 students (0.00%)**
+- **Train & Validation Overlap**: **0 students (0.00%)**
+- **Validation & Test Overlap**: **0 students (0.00%)**
+- **Across All Three Splits**: **0 students (0.00%)**
+
+Zero student IDs co-occur across splits, ensuring strictly unbiased evaluation on unseen students.
 
 ## Earlier feedback addressed
+- Updated data pipeline (`src/prepare_data.py`) with `GroupShuffleSplit` on `id_student`, completely eliminating student overlap across train, validation, and test splits (0.00% overlap).
+- Fixed path resolution and unpickling error in notebook `notebooks/02_ann_model.ipynb`; all cells now execute cleanly with zero errors.
 - Added visual evidence screenshots (`01_app_form.png`, `02_prediction_result.png`, `03_validation_error.png`) under `docs/evidence/step5/`.
 - Conducted and documented a complete student-level data leakage audit between training and test sets using set intersection metrics.
-- Kept model training and hyperparameter search strictly isolated in Step 3; Product V1 performs inference only on the saved model artifact.
-- Implemented comprehensive input validation guarding against missing fields, negative counts, non-finite values, and out-of-bounds percentages before pipeline ingestion.
 - Ensured absolute parity between CLI reference predictions and interactive Streamlit execution.
 
 ## Limitations and responsible use
@@ -149,9 +143,10 @@ overlap_train_val = train_ids & val_ids
 
 ## Team contributions
 - **Team NeuroNexus (Devashmitha)**:
+  - Partitioned dataset using student-level grouped splitting (`GroupShuffleSplit`) to guarantee 0% data leakage across splits.
+  - Resolved notebook path resolution and execution error in `02_ann_model.ipynb`.
+  - Retrained and evaluated the ANN MLPClassifier pipeline on strictly unseen students.
   - Designed and implemented the Product V1 Streamlit interface (`app.py`).
   - Developed the robust inference and validation module (`src/product_predict.py`).
-  - Built automated unit test suites (`test_product_predict.py`).
-  - Implemented verification scripts (`src/check_product_prediction.py`).
-  - Conducted the student overlap and data split audit (`src/audit_student_split.py`, `src/demo_group_split.py`).
-  - Generated visual evidence and authored the comprehensive Step 5 documentation (`docs/STEP-5.md`).
+  - Built automated unit test suites (`test_product_predict.py`) and verification scripts (`src/check_product_prediction.py`).
+  - Generated visual evidence and completed the Step 5 documentation (`docs/STEP-5.md`).

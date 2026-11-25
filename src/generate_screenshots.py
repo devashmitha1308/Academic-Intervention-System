@@ -39,7 +39,7 @@ def create_form_screenshot():
     # Success notice
     success_box = patches.FancyBboxPatch((35, 76), 60, 4, boxstyle="round,pad=0.3", facecolor="#064e3b", edgecolor="#10b981", linewidth=1)
     ax.add_patch(success_box)
-    ax.text(37, 77.5, "Loaded validation sample into form fields successfully (STU-631293).", color="#a7f3d0", fontsize=9)
+    ax.text(37, 77.5, "Loaded validation sample into form fields successfully (STU-6516).", color="#a7f3d0", fontsize=9)
 
     # Form Box
     form_bg = patches.FancyBboxPatch((5, 10), 90, 63, boxstyle="round,pad=0.8", facecolor="#1a1c23", edgecolor="#374151", linewidth=1)
@@ -49,12 +49,12 @@ def create_form_screenshot():
     # Column 1: Demographics
     ax.text(7, 66, "Student Demographics & Course Profile", color="#60a5fa", fontsize=11, fontweight="bold")
     demo_fields = [
-        ("Course Module Code", "DDD"),
-        ("Presentation Cohort", "2014J"),
-        ("Gender", "F"),
-        ("Geographic Region", "East Anglian Region"),
-        ("Highest Education", "Lower Than A Level"),
-        ("Index of Multiple Deprivation Band", "30-40%"),
+        ("Course Module Code", "AAA"),
+        ("Presentation Cohort", "2013J"),
+        ("Gender", "M"),
+        ("Geographic Region", "Yorkshire Region"),
+        ("Highest Education", "HE Qualification"),
+        ("Index of Multiple Deprivation Band", "60-70%"),
         ("Age Band", "35-55"),
         ("Number of Previous Attempts", "0"),
         ("Total Studied Credits", "60"),
@@ -71,16 +71,16 @@ def create_form_screenshot():
     # Column 2: Academic & Engagement
     ax.text(53, 66, "Academic Performance & VLE Engagement", color="#60a5fa", fontsize=11, fontweight="bold")
     acad_fields = [
-        ("Assessment Average Score (%)", "62.5"),
+        ("Assessment Average Score (%)", "76.5"),
         ("Number of Assessments Submitted", "2.0"),
-        ("Maximum Assessment Score (%)", "65.0"),
-        ("Minimum Assessment Score (%)", "60.0"),
-        ("Weighted Assessment Score (%)", "63.33"),
-        ("VLE Total Clicks", "152.0"),
-        ("Average Clicks per Activity", "2.24"),
-        ("Maximum Clicks on Single Activity", "6.0"),
-        ("Active Online Learning Days", "16.0"),
-        ("Unique Course Resources Accessed", "19.0"),
+        ("Maximum Assessment Score (%)", "79.0"),
+        ("Minimum Assessment Score (%)", "74.0"),
+        ("Weighted Assessment Score (%)", "77.33"),
+        ("VLE Total Clicks", "587.0"),
+        ("Average Clicks per Activity", "3.07"),
+        ("Maximum Clicks on Single Activity", "21.0"),
+        ("Active Online Learning Days", "44.0"),
+        ("Unique Course Resources Accessed", "41.0"),
     ]
     y_pos = 62
     for label, val in acad_fields:
@@ -114,29 +114,29 @@ def create_result_screenshot():
     ax.text(5, 91, "Product V1 — Decision-Support Interface", color="#a3b8cc", fontsize=13)
 
     # Results Header
-    res_box = patches.FancyBboxPatch((5, 55), 90, 32, boxstyle="round,pad=0.8", facecolor="#1e1e2d", edgecolor="#ef4444", linewidth=1.5)
+    res_box = patches.FancyBboxPatch((5, 55), 90, 32, boxstyle="round,pad=0.8", facecolor="#1e1e2d", edgecolor="#10b981", linewidth=1.5)
     ax.add_patch(res_box)
 
     ax.text(8, 83, "Intervention Decision-Support Result", color="#ffffff", fontsize=14, fontweight="bold")
 
     # Status Alert
-    status_alert = patches.FancyBboxPatch((8, 73), 84, 7, boxstyle="round,pad=0.4", facecolor="#450a0a", edgecolor="#ef4444", linewidth=1)
+    status_alert = patches.FancyBboxPatch((8, 73), 84, 7, boxstyle="round,pad=0.4", facecolor="#064e3b", edgecolor="#10b981", linewidth=1)
     ax.add_patch(status_alert)
-    ax.text(10, 77, "Predicted Status: Higher Risk (Academic Intervention Recommended)", color="#fca5a5", fontsize=11, fontweight="bold")
-    ax.text(10, 74.5, "Model Class: 1 (At-Risk Indicator Triggered)", color="#f87171", fontsize=9.5)
+    ax.text(10, 77, "Predicted Status: Lower Risk (Standard Academic Progress)", color="#a7f3d0", fontsize=11, fontweight="bold")
+    ax.text(10, 74.5, "Model Class: 0 (Steady Academic Performance)", color="#6ee7b7", fontsize=9.5)
 
     # Recommendation
-    rec_alert = patches.FancyBboxPatch((8, 63), 84, 8, boxstyle="round,pad=0.4", facecolor="#422006", edgecolor="#f59e0b", linewidth=1)
+    rec_alert = patches.FancyBboxPatch((8, 63), 84, 8, boxstyle="round,pad=0.4", facecolor="#0c4a6e", edgecolor="#0284c7", linewidth=1)
     ax.add_patch(rec_alert)
-    ax.text(10, 68, "Action Recommended: Supportive Action", color="#fde68a", fontsize=10.5, fontweight="bold")
-    ax.text(10, 65, "Schedule a faculty mentoring consultation, develop a personalized study plan,", color="#fef3c7", fontsize=9)
-    ax.text(10, 63.5, "and check in on upcoming assessment deadlines.", color="#fef3c7", fontsize=9)
+    ax.text(10, 68, "Action Recommended: Standard Monitoring", color="#bae6fd", fontsize=10.5, fontweight="bold")
+    ax.text(10, 65, "Student engagement and scores indicate steady progress. Continue regular coursework", color="#e0f2fe", fontsize=9)
+    ax.text(10, 63.5, "and routine academic milestones.", color="#e0f2fe", fontsize=9)
 
     # Metric Card
     metric_card = patches.FancyBboxPatch((8, 43), 40, 9.5, boxstyle="round,pad=0.5", facecolor="#262730", edgecolor="#4b5563", linewidth=1)
     ax.add_patch(metric_card)
     ax.text(10, 49.5, "Estimated Risk Probability", color="#9ca3af", fontsize=10)
-    ax.text(10, 45, "96.76%", color="#f87171", fontsize=18, fontweight="bold")
+    ax.text(10, 45, "5.19%", color="#34d399", fontsize=18, fontweight="bold")
 
     # Notice
     ax.text(8, 38, "Educational decision-support prediction only. Assists mentors in proactive outreach.", color="#9ca3af", fontsize=8.5, style="italic")
@@ -148,7 +148,7 @@ def create_result_screenshot():
     ax.text(10, 31, "Prediction Output Table (1 row, 25 columns)", color="#60a5fa", fontsize=10, fontweight="bold")
     
     headers = ["predicted_class", "label", "probability", "code_module", "score_avg", "clicks"]
-    vals = ["1", "Higher Risk", "0.9676", "DDD", "62.5", "152.0"]
+    vals = ["0", "Lower Risk", "0.0519", "AAA", "76.5", "587.0"]
     x = 10
     for h, v in zip(headers, vals):
         ax.text(x, 26, h, color="#9ca3af", fontsize=8, fontweight="bold")

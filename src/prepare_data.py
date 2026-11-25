@@ -1,7 +1,7 @@
 from pathlib import Path
 import json
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -420,19 +420,29 @@ def main():
         .round(2)
     )
 
-    train, temp = train_test_split(
-        data,
-        test_size=0.30,
-        random_state=42,
-        stratify=data["risk"]
-    )
+    train_gss = GroupShuffleSplit(n_splits=1, test_size=0.30, random_state=42)
+    train_idx, temp_idx = next(train_gss.split(data, groups=data["id_student"]))
 
-    validation, test = train_test_split(
-        temp,
-        test_size=0.50,
-        random_state=42,
-        stratify=temp["risk"]
-    )
+    train = data.iloc[train_idx].copy()
+    temp = data.iloc[temp_idx].copy()
+
+    val_test_gss = GroupShuffleSplit(n_splits=1, test_size=0.50, random_state=42)
+    val_idx, test_idx = next(val_test_gss.split(temp, groups=temp["id_student"]))
+
+    validation = temp.iloc[val_idx].copy()
+    test = temp.iloc[test_idx].copy()
+
+    train_students = set(train["id_student"])
+    val_students = set(validation["id_student"])
+    test_students = set(test["id_student"])
+
+    print("\nStudent-level Group Isolation Check:")
+    print(f"  Train:      {len(train):,} rows | {len(train_students):,} unique students")
+    print(f"  Validation: {len(validation):,} rows | {len(val_students):,} unique students")
+    print(f"  Test:       {len(test):,} rows | {len(test_students):,} unique students")
+    print(f"  Overlap Train & Test:       {len(train_students & test_students)} (0.00%)")
+    print(f"  Overlap Train & Validation: {len(train_students & val_students)} (0.00%)")
+    print(f"  Overlap Validation & Test:  {len(val_students & test_students)} (0.00%)")
 
     train.to_csv(
         PROCESSED_DIR / "train.csv",
@@ -458,9 +468,17 @@ def main():
         "dataset": "OULAD",
         "intervention_cutoff_day": CUTOFF_DAY,
         "total_records": int(len(data)),
+        "unique_students": int(data["id_student"].nunique()),
         "training_records": int(len(train)),
+        "training_unique_students": int(len(train_students)),
         "validation_records": int(len(validation)),
+        "validation_unique_students": int(len(val_students)),
         "test_records": int(len(test)),
+        "test_unique_students": int(len(test_students)),
+        "train_test_student_overlap": len(train_students & test_students),
+        "train_val_student_overlap": len(train_students & val_students),
+        "val_test_student_overlap": len(val_students & test_students),
+        "split_method": "GroupShuffleSplit by id_student (guaranteed 0 student overlap)",
         "features": list(data.columns),
         "missing_values": {
             column: int(value)

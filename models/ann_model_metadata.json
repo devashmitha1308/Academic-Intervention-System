@@ -32,8 +32,8 @@
     "active_days",
     "unique_resources"
   ],
-  "training_rows": 22815,
-  "validation_rows": 4889,
-  "test_rows": 4889,
+  "training_rows": 22842,
+  "validation_rows": 4857,
+  "test_rows": 4894,
   "random_state": 42
 }

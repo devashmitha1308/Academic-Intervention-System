@@ -1,18 +1,18 @@
-
 # Step 4: Baseline Comparison
 
 ## Objective
 
-Compare a simple assessment-based threshold baseline with the previously trained Artificial Neural Network (ANN) on the same validation and test splits.
+Compare a simple assessment-based threshold baseline with the previously trained Artificial Neural Network (ANN) on the same validation and test splits with strict student-level group isolation.
 
 ## Dataset
 
-- Training rows: 22,815
-- Validation rows: 4,889
-- Test rows: 4,889
+- Training rows: 22,842 (20,149 unique students)
+- Validation rows: 4,857 (4,318 unique students)
+- Test rows: 4,894 (4,318 unique students)
 - Target column: `risk`
-- Positive class: `1` (at-risk student)
+- Positive class: `1` (at-risk student needing intervention)
 - Negative class: `0` (not classified as at-risk)
+- Cross-split student overlap: **0 (0.00%)**
 
 ## Baseline Rule
 
@@ -24,31 +24,31 @@ The threshold is fixed at 50 and is not tuned using validation or test outcomes.
 
 | Metric | Threshold Baseline | ANN |
 |---|---:|---:|
-| Accuracy | 0.7208 | 0.8282 |
-| Precision | 0.9170 | 0.8665 |
-| Recall | 0.5180 | 0.7974 |
-| F1 Score | 0.6620 | 0.8305 |
-| False Positives | 121 | 317 |
-| False Negatives | 1244 | 523 |
+| Accuracy | 0.7179 | 0.8209 |
+| Precision | 0.9242 | 0.9008 |
+| Recall | 0.5080 | 0.7429 |
+| F1 Score | 0.6556 | 0.8143 |
+| False Positives | 107 | 210 |
+| False Negatives | 1,263 | 660 |
 
 ## Test Results
 
 | Metric | Threshold Baseline | ANN |
 |---|---:|---:|
-| Accuracy | 0.7231 | 0.8374 |
-| Precision | 0.9165 | 0.8749 |
-| Recall | 0.5231 | 0.8074 |
-| F1 Score | 0.6660 | 0.8398 |
-| False Positives | 123 | 298 |
-| False Negatives | 1231 | 497 |
+| Accuracy | 0.7278 | 0.8277 |
+| Precision | 0.9296 | 0.8949 |
+| Recall | 0.5279 | 0.7659 |
+| F1 Score | 0.6734 | 0.8254 |
+| False Positives | 104 | 234 |
+| False Negatives | 1,228 | 609 |
 
 ## Interpretation
 
-The ANN achieves higher accuracy, recall, and F1 score on both validation and test splits. The threshold baseline has higher precision but misses more at-risk students.
+The ANN achieves substantially higher accuracy, recall, and F1 score on both validation and test splits. While the threshold baseline has marginally higher precision, it misses nearly half of at-risk students.
 
-On the test split, the baseline has 1,231 false negatives compared with 497 for the ANN. For an academic-support tool, missed at-risk students are important to monitor.
+On the test split, the baseline produces 1,228 false negatives compared with 609 for the ANN — meaning the ANN cuts missed at-risk students by more than half (50.4% reduction). For an early academic-support tool, minimizing missed at-risk students is critical for proactive mentoring.
 
-These results support further evaluation of the ANN as a screening aid. They do not establish that either model is fair or suitable for automated high-stakes decisions.
+These results support further evaluation of the ANN as a decision-support aid. They do not establish that either model is suitable for automated high-stakes administrative decisions.
 
 ## Reproducibility and Outputs
 
